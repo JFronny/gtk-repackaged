@@ -102,18 +102,19 @@ tasks["compileWindowsAdwJava"].dependsOn(computeOrderAdw)
 val windowsGtkJar by tasks.registering(Jar::class) {
     dependsOn("windowsGtkClasses")
     from(sourceSets["windowsGtk"].output)
-    archiveClassifier = "windows-gtk"
+    archiveAppendix = "windows-gtk"
 }
 
 val windowsAdwJar by tasks.registering(Jar::class) {
     dependsOn("windowsAdwClasses")
     from(sourceSets["windowsAdw"].output)
-    archiveClassifier = "windows-adw"
+    archiveAppendix = "windows-adw"
 }
 
 val commonJar by tasks.registering(Jar::class) {
     dependsOn("commonClasses")
     from(sourceSets["common"].output)
+    archiveAppendix = "common"
 }
 
 tasks.jar {
@@ -128,11 +129,11 @@ val run by tasks.registering(JavaExec::class) {
 publishing {
     publications {
         create<MavenPublication>("windowsGtk") {
-            artifactId = "gtk-repackaged-natives"
+            artifactId = "gtk-repackaged-windows-gtk"
             artifact(windowsGtkJar)
         }
         create<MavenPublication>("windowsAdw") {
-            artifactId = "gtk-repackaged-natives"
+            artifactId = "gtk-repackaged-windows-adw"
             artifact(windowsAdwJar)
         }
         create<MavenPublication>("common") {
