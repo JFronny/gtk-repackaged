@@ -1,7 +1,15 @@
 package de.frohnmeyerwds.gtkrp;
 
+import java.util.ServiceLoader;
+
 public class GtkRepackaged {
     public static void init() throws Exception {
-        // Not needed on non-Windows platforms
+        for (Initializer initializer : ServiceLoader.load(Initializer.class)) {
+            initializer.init();
+        }
+    }
+
+    public interface Initializer {
+        void init() throws Exception;
     }
 }

@@ -22,13 +22,15 @@ public class OrderResolver {
         System.setProperty("javagi.path", String.join(File.pathSeparator, args));
         Path dir = Path.of(args[0]).resolve("de/frohnmeyerwds/gtkrp");
         Files.createDirectories(dir);
-        BufferedWriter writer = Files.newBufferedWriter(dir.resolve("GtkRepackaged.java"));
+        BufferedWriter writer = Files.newBufferedWriter(dir.resolve("GtkRepackagedWindows.java"));
         writer.append("""
                 package de.frohnmeyerwds.gtkrp;
                 
-                public class GtkRepackaged {
-                    public static void init() throws Exception {
-                        GtkRpImpl.prepare();
+                public class GtkRepackagedWindows implements GtkRepackaged.Initializer {
+                    @Override
+                    public void init() throws Exception {
+                        if (!System.getProperty("os.name", "generic").toLowerCase().contains("win")) return;
+                        GtkRepackagedWindowsImpl.prepare();
                 """);
         if (System.getProperty("os.name", "generic").toLowerCase().contains("win")) {
             while (!set.isEmpty()) {
@@ -39,7 +41,7 @@ public class OrderResolver {
                     set.add(p);
                     continue;
                 }
-                writer.append("        GtkRpImpl.load(\"").append(p.getFileName().toString()).append("\");\n");
+                writer.append("        GtkRepackagedWindowsImpl.load(\"").append(p.getFileName().toString()).append("\");\n");
             }
         } else {
             System.err.println("WARNING:");

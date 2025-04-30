@@ -4,6 +4,7 @@ plugins {
     id("java")
     id("de.undercouch.download") version "5.6.0"
     id("jf.java") version "1.8-SNAPSHOT"
+    id("maven-publish")
 }
 
 group = "de.frohnmeyer-wds"
@@ -13,33 +14,25 @@ repositories {
     mavenCentral()
 }
 
-val extraResourcesGtk = layout.buildDirectory.dir("extra-resources-gtk")
-val extraJavaGtk = layout.buildDirectory.dir("extra-java-gtk")
-val extraResourcesAdw = layout.buildDirectory.dir("extra-resources-adw")
-val extraJavaAdw = layout.buildDirectory.dir("extra-java-adw")
+val extraResourcesGtk = layout.buildDirectory.dir("generated/windows-gtk/resources")
+val extraJavaGtk = layout.buildDirectory.dir("generated/windows-gtk/java")
+val extraResourcesAdw = layout.buildDirectory.dir("generated/windows-adw/resources")
+val extraJavaAdw = layout.buildDirectory.dir("generated/windows-adw/java")
 
 sourceSets {
+    val common by creating
     val windowsGtk by creating {
-        java {
-            srcDirs.clear()
-            srcDirs(extraJavaGtk, "src/windows/java")
-        }
-        resources {
-            srcDirs.clear()
-            srcDirs(extraResourcesGtk)
-        }
+        java.srcDirs(extraJavaGtk, "src/windows/java")
+        resources.srcDirs(extraResourcesGtk, "src/windows/resources")
+        compileClasspath += common.compileClasspath + common.output
+        runtimeClasspath += common.runtimeClasspath + common.output
     }
     val windowsAdw by creating {
-        java {
-            srcDirs.clear()
-            srcDirs(extraJavaAdw, "src/windows/java")
-        }
-        resources {
-            srcDirs.clear()
-            srcDirs(extraResourcesAdw)
-        }
+        java.srcDirs(extraJavaAdw, "src/windows/java")
+        resources.srcDirs(extraResourcesAdw, "src/windows/resources")
+        compileClasspath += common.compileClasspath + common.output
+        runtimeClasspath += common.runtimeClasspath + common.output
     }
-    val common by creating
     val order by creating
     val demo by creating {
         val orig = if (OS.TYPE == OS.Type.WINDOWS) windowsAdw else common
@@ -90,6 +83,7 @@ val computeOrderGtk by tasks.registering(JavaExec::class) {
     mainClass = "de.frohnmeyerwds.gtkrp.OrderResolver"
     outputs.dir(extraJavaGtk)
     args(extraJavaGtk.get().asFile.absolutePath, nativesPathGtk.get().asFile.absolutePath)
+    doFirst { extraJavaGtk.get().asFile.delete() }
 }
 val computeOrderAdw by tasks.registering(JavaExec::class) {
     dependsOn(extractNativesAdw)
@@ -97,6 +91,7 @@ val computeOrderAdw by tasks.registering(JavaExec::class) {
     mainClass = "de.frohnmeyerwds.gtkrp.OrderResolver"
     outputs.dir(extraJavaAdw)
     args(extraJavaAdw.get().asFile.absolutePath, nativesPathAdw.get().asFile.absolutePath)
+    doFirst { extraJavaAdw.get().asFile.delete() }
 }
 
 tasks["processWindowsGtkResources"].dependsOn(extractNativesGtk)
@@ -107,36 +102,48 @@ tasks["compileWindowsAdwJava"].dependsOn(computeOrderAdw)
 val windowsGtkJar by tasks.registering(Jar::class) {
     dependsOn("windowsGtkClasses")
     from(sourceSets["windowsGtk"].output)
-    archiveAppendix = "windows-gtk"
+    archiveClassifier = "windows-gtk"
 }
 
 val windowsAdwJar by tasks.registering(Jar::class) {
     dependsOn("windowsAdwClasses")
     from(sourceSets["windowsAdw"].output)
-    archiveAppendix = "windows-adw"
+    archiveClassifier = "windows-adw"
 }
 
 val commonJar by tasks.registering(Jar::class) {
     dependsOn("commonClasses")
     from(sourceSets["common"].output)
-    archiveAppendix = "common"
 }
 
 tasks.jar {
     enabled = false
 }
 
-val moveArtifacts by tasks.registering(Copy::class) {
-    from(windowsGtkJar, windowsAdwJar, commonJar)
-    into(layout.projectDirectory)
-    doNotTrackState("Target directory is project root")
-}
-
-tasks.assemble {
-    dependsOn(moveArtifacts)
-}
-
 val run by tasks.registering(JavaExec::class) {
     classpath(sourceSets["demo"].runtimeClasspath)
     mainClass = "de.frohnmeyerwds.gtkrpdemo.Main"
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("windowsGtk") {
+            artifactId = "gtk-repackaged-natives"
+            artifact(windowsGtkJar)
+        }
+        create<MavenPublication>("windowsAdw") {
+            artifactId = "gtk-repackaged-natives"
+            artifact(windowsAdwJar)
+        }
+        create<MavenPublication>("common") {
+            artifactId = "gtk-repackaged"
+            artifact(commonJar)
+        }
+    }
+    repositories {
+        maven {
+            name = "GitHubPages"
+            url = uri(layout.buildDirectory.dir("maven-repo").get().asFile.toURI())
+        }
+    }
 }

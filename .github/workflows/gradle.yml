@@ -1,4 +1,4 @@
-name: Build multiplatform example
+name: Build and publish to GitHub Pages
 
 on:
   push:
@@ -9,6 +9,7 @@ jobs:
     runs-on: windows-latest
     permissions:
       contents: write
+      pages: write
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK
@@ -20,12 +21,11 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
       - name: Build with Gradle
         shell: cmd
-        run: gradlew.bat build
-      - name: Generate Release
-        uses: softprops/action-gh-release@v2
+        run: gradlew.bat build publish
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          token: "${{ secrets.GITHUB_TOKEN }}"
-          tag_name: "libraries"
-          name: "Generated Libraries"
-          files: |
-            *.jar
+          path: 'build/maven-repo'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
