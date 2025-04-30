@@ -129,6 +129,7 @@ tasks.jar {
 val moveArtifacts by tasks.registering(Copy::class) {
     from(windowsGtkJar, windowsAdwJar, commonJar)
     into(layout.projectDirectory)
+    doNotTrackState("Target directory is project root")
 }
 
 tasks.assemble {
