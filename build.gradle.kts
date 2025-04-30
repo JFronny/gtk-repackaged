@@ -126,8 +126,13 @@ tasks.jar {
     enabled = false
 }
 
+val moveArtifacts by tasks.registering(Copy::class) {
+    from(windowsGtkJar, windowsAdwJar, commonJar)
+    into(layout.projectDirectory)
+}
+
 tasks.assemble {
-    dependsOn(windowsGtkJar, windowsAdwJar, commonJar)
+    dependsOn(moveArtifacts)
 }
 
 val run by tasks.registering(JavaExec::class) {

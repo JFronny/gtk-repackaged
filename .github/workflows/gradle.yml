@@ -1,0 +1,29 @@
+name: Build multiplatform example
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 24
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Build with Gradle
+        shell: cmd
+        run: gradlew.bat build
+      - name: Generate Release
+        uses: softprops/action-gh-release@v2
+        with:
+          token: "${{ secrets.GITHUB_TOKEN }}"
+          tag_name: "libraries"
+          name: "Generated Libraries"
+          files: |
+            *.jar
