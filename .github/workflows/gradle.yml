@@ -8,8 +8,9 @@ jobs:
   build:
     runs-on: windows-latest
     permissions:
-      contents: write
+      contents: read
       pages: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK
