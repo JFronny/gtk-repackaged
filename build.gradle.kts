@@ -7,7 +7,7 @@ plugins {
     id("maven-publish")
 }
 
-group = "de.frohnmeyer-wds"
+group = "de.frohnmeyer-wds.gtk-repackaged"
 version = "1.0"
 
 repositories {
