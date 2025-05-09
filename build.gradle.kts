@@ -53,12 +53,12 @@ tasks.test {
 }
 
 val downloadNativesGtk by tasks.registering(de.undercouch.gradle.tasks.download.Download::class) {
-    src("https://github.com/JFronny/javagi-multiplatform/releases/download/libraries/natives-gtk.zip")
+    src("https://github.com/jwharm/java-gi/releases/download/libraries/natives-gtk.zip")
     dest(layout.buildDirectory.file("natives-gtk.zip"))
     overwrite(false)
 }
 val downloadNativesAdw by tasks.registering(de.undercouch.gradle.tasks.download.Download::class) {
-    src("https://github.com/JFronny/javagi-multiplatform/releases/download/libraries/natives-adw.zip")
+    src("https://github.com/jwharm/java-gi/releases/download/libraries/natives-adw.zip")
     dest(layout.buildDirectory.file("natives-adw.zip"))
     overwrite(false)
 }
@@ -117,8 +117,45 @@ val commonJar by tasks.registering(Jar::class) {
     archiveAppendix = "common"
 }
 
+val resourcesGtkGi = layout.buildDirectory.dir("generated/windows-gtk-gi/resources")
+val resourcesAdwGi = layout.buildDirectory.dir("generated/windows-adw-gi/resources")
+val nativesPathGtkGi = resourcesGtkGi.map { it.dir("io/github/jwharm/javagi/natives") }
+val nativesPathAdwGi = resourcesAdwGi.map { it.dir("io/github/jwharm/javagi/natives") }
+
+val prepareGtkGi by tasks.registering(Copy::class) {
+    dependsOn(extractNativesGtk, computeOrderGtk)
+    from(nativesPathGtk)
+    into(nativesPathGtkGi)
+//    doLast {
+//        resourcesGtkGi.get().file("x.txt").asFile.writeText("Hi!")
+//    }
+}
+val prepareAdwGi by tasks.registering(Copy::class) {
+    dependsOn(extractNativesAdw, computeOrderAdw)
+    from(nativesPathAdw)
+    into(nativesPathAdwGi)
+//    doLast {
+//        resourcesAdwGi.get().file("x.txt").asFile.writeText("Hi!")
+//    }
+}
+
+val windowsGtkGiJar by tasks.registering(Jar::class) {
+    dependsOn(prepareGtkGi)
+    from(resourcesGtkGi)
+    archiveAppendix = "windows-gtk-gi"
+}
+val windowsAdwGiJar by tasks.registering(Jar::class) {
+    dependsOn(prepareAdwGi)
+    from(resourcesAdwGi)
+    archiveAppendix = "windows-adw-gi"
+}
+
 tasks.jar {
     enabled = false
+}
+
+tasks.assemble {
+    dependsOn(windowsGtkJar, windowsAdwJar, commonJar, windowsGtkGiJar, windowsAdwGiJar)
 }
 
 val run by tasks.registering(JavaExec::class) {
@@ -139,6 +176,14 @@ publishing {
         create<MavenPublication>("common") {
             artifactId = "gtk-repackaged"
             artifact(commonJar)
+        }
+        create<MavenPublication>("windowsGtkGi") {
+            artifactId = "gtk-repackaged-windows-gtk-gi"
+            artifact(windowsGtkGiJar)
+        }
+        create<MavenPublication>("windowsAdwGi") {
+            artifactId = "gtk-repackaged-windows-adw-gi"
+            artifact(windowsAdwGiJar)
         }
     }
     repositories {
