@@ -123,20 +123,14 @@ val nativesPathGtkGi = resourcesGtkGi.map { it.dir("io/github/jwharm/javagi/nati
 val nativesPathAdwGi = resourcesAdwGi.map { it.dir("io/github/jwharm/javagi/natives") }
 
 val prepareGtkGi by tasks.registering(Copy::class) {
-    dependsOn(extractNativesGtk, computeOrderGtk)
+    dependsOn(extractNativesGtk)
     from(nativesPathGtk)
     into(nativesPathGtkGi)
-//    doLast {
-//        resourcesGtkGi.get().file("x.txt").asFile.writeText("Hi!")
-//    }
 }
 val prepareAdwGi by tasks.registering(Copy::class) {
-    dependsOn(extractNativesAdw, computeOrderAdw)
+    dependsOn(extractNativesAdw)
     from(nativesPathAdw)
     into(nativesPathAdwGi)
-//    doLast {
-//        resourcesAdwGi.get().file("x.txt").asFile.writeText("Hi!")
-//    }
 }
 
 val windowsGtkGiJar by tasks.registering(Jar::class) {
