@@ -17,6 +17,7 @@ public class OrderResolver {
                 .skip(1)
                 .map(Path::of)
                 .flatMap(OrderResolver::list)
+                .filter(s -> s.getFileName().toString().endsWith(".dll"))
                 .sorted(Comparator.comparing(String::valueOf))
                 .collect(Collectors.toCollection(LinkedHashSet::new));
         System.setProperty("javagi.path", String.join(File.pathSeparator, args));
